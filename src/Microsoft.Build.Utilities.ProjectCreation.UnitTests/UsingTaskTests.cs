@@ -92,15 +92,14 @@ namespace Microsoft.Build.Utilities.ProjectCreation.UnitTests
                     StringCompareShould.IgnoreLineEndings);
         }
 
-
         [Fact]
         public void UsingTaskRoslynCode()
         {
             ProjectCreator.Create(projectFileOptions: NewProjectFileOptions.None)
                 .UsingTaskRoslynCode(
                     taskName: "MySample",
-                    references: null,
-                    usings: null,
+                    references: ["netstandard"],
+                    usings: ["System"],
                     code: """
                     Log.LogMessage(MessageImportance.High, "Hello from an inline task created by Roslyn!");
                     Log.LogMessageFromText($"Parameter1: '{Parameter1}'", MessageImportance.High);
@@ -126,23 +125,19 @@ namespace Microsoft.Build.Utilities.ProjectCreation.UnitTests
                 .ShouldBe(
                     """
                     <Project>
-                      <UsingTask TaskName="MySample" AssemblyFile="$(MSBuildBinPath)\Microsoft.Build.Tasks.Core.dll" TaskFactory="RoslynCodeTaskFactory">
+                      <UsingTask TaskName="MySample" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll" TaskFactory="RoslynCodeTaskFactory">
                         <ParameterGroup>
-                          <Parameter1 ParameterType="System.String" Required="true" />
-                          <Parameter2 ParameterType="System.String" />
-                          <Parameter3 ParameterType="System.String" Output="true" />
+                          <Parameter1 Output="False" Required="True" ParameterType="System.String" />
+                          <Parameter2 Output="False" Required="False" ParameterType="System.String" />
+                          <Parameter3 Output="True" Required="False" ParameterType="System.String" />
                         </ParameterGroup>
                         <Task>
-                          <Using Namespace="System" />
-                            <Code Type="Fragment" Language="cs">
-                              <![CDATA[
-                              Log.LogMessage(MessageImportance.High, "Hello from an inline task created by Roslyn!");
-                              Log.LogMessageFromText($"Parameter1: '{Parameter1}'", MessageImportance.High);
-                              Log.LogMessageFromText($"Parameter2: '{Parameter2}'", MessageImportance.High);
-                              Parameter3 = "A value from the Roslyn CodeTaskFactory";
-                              ]]>
-                            </Code>
-                         </Task>
+                          <Reference Include="netstandard" />
+                    <Using Namespace="System" />
+                    <Code Type="Fragment" Language="cs"><![CDATA[Log.LogMessage(MessageImportance.High, "Hello from an inline task created by Roslyn!");
+                    Log.LogMessageFromText($"Parameter1: '{Parameter1}'", MessageImportance.High);
+                    Log.LogMessageFromText($"Parameter2: '{Parameter2}'", MessageImportance.High);
+                    Parameter3 = "A value from the Roslyn CodeTaskFactory";]]></Code></Task>
                       </UsingTask>
                     </Project>
                     """,
