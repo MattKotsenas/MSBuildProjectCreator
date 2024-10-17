@@ -113,7 +113,7 @@ namespace Microsoft.Build.Utilities.ProjectCreation
             return this;
         }
 
-        public ProjectCreator UsingTaskRoslynCode(string taskName, string code, string language = "cs", IEnumerable<string>? references = null, IEnumerable<string>? usings = null, string? taskFactory = null, string? runtime = null, string? architecture = null, string? condition = null, string? label = null)
+        public ProjectCreator UsingTaskRoslynCode(string taskName, string code, string language = "cs", IEnumerable<string>? references = null, IEnumerable<string>? usings = null, string? taskFactory = null, string? runtime = null, string? architecture = null, string? condition = null, string? label = null, bool? evaluate = null)
         {
             UsingTaskAssemblyFile(
                 taskName: taskName,
@@ -136,22 +136,22 @@ namespace Microsoft.Build.Utilities.ProjectCreation
                 body.AppendLine($"<Using Namespace=\"{u}\" />");
             }
 
-            body.AppendLine($"<Code Type=\"Fragment\" Language=\"{language}\">");
+            body.Append($"<Code Type=\"Fragment\" Language=\"{language}\">");
 
             if (!code.AsSpan().TrimStart().StartsWith("<![CDATA[".AsSpan(), StringComparison.Ordinal))
             {
-                body.AppendLine("<![CDATA[");
-                body.AppendLine(code);
-                body.AppendLine("]]>");
+                body.Append("<![CDATA[");
+                body.Append(code);
+                body.Append("]]>");
             }
             else
             {
-                body.AppendLine(code);
+                body.Append(code);
             }
 
-            body.AppendLine("</Code>");
+            body.Append("</Code>");
 
-            UsingTaskBody(body.ToString(), evaluate: null);
+            UsingTaskBody(body.ToString(), evaluate);
 
             return this;
         }
