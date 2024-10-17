@@ -3,6 +3,9 @@
 // Licensed under the MIT license.
 
 using Microsoft.Build.Construction;
+using System;
+using System.Collections.Generic;
+using System.Text;
 
 namespace Microsoft.Build.Utilities.ProjectCreation
 {
@@ -106,6 +109,49 @@ namespace Microsoft.Build.Utilities.ProjectCreation
                 output?.ToString() ?? string.Empty,
                 required?.ToString() ?? string.Empty,
                 parameterType ?? string.Empty);
+
+            return this;
+        }
+
+        public ProjectCreator UsingTaskRoslynCode(string taskName, string code, string language = "cs", IEnumerable<string>? references = null, IEnumerable<string>? usings = null, string? taskFactory = null, string? runtime = null, string? architecture = null, string? condition = null, string? label = null)
+        {
+            UsingTaskAssemblyFile(
+                taskName: taskName,
+                assemblyFile: @"$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll",
+                taskFactory: "RoslynCodeTaskFactory",
+                runtime: runtime,
+                architecture: architecture,
+                condition: condition,
+                label: label);
+
+            StringBuilder body = new();
+
+            foreach (string r in references ?? [])
+            {
+                body.AppendLine($"<Reference Include=\"{r}\" />");
+            }
+
+            foreach (string u in usings ?? [])
+            {
+                body.AppendLine($"<Using Namespace=\"{u}\" />");
+            }
+
+            body.AppendLine($"<Code Type=\"Fragment\" Language=\"{language}\">");
+
+            if (!code.AsSpan().TrimStart().StartsWith("<![CDATA[".AsSpan(), StringComparison.Ordinal))
+            {
+                body.AppendLine("<![CDATA[");
+                body.AppendLine(code);
+                body.AppendLine("]]>");
+            }
+            else
+            {
+                body.AppendLine(code);
+            }
+
+            body.AppendLine("</Code>");
+
+            UsingTaskBody(body.ToString(), evaluate: null);
 
             return this;
         }
